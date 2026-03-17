@@ -1,0 +1,114 @@
+# -------------------------
+# Python bytecode / caches
+# -------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.pytype/
+.cache/
+
+# -------------------------
+# Virtual environments
+# -------------------------
+.venv/
+venv/
+env/
+ENV/
+.conda/
+conda-env/
+
+# -------------------------
+# Jupyter / IPython
+# -------------------------
+.ipynb_checkpoints/
+.ipython/
+
+# -------------------------
+# Streamlit
+# -------------------------
+.streamlit/secrets.toml
+.streamlit/*.toml
+!/.streamlit/config.toml
+
+# Streamlit runtime files
+.streamlit/cache/
+*.streamlit
+
+# -------------------------
+# OS / Editor files
+# -------------------------
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# VS Code
+.vscode/
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/launch.json
+!.vscode/tasks.json
+
+# JetBrains IDEs
+.idea/
+
+# -------------------------
+# Logs and local outputs
+# -------------------------
+*.log
+logs/
+*.tmp
+*.temp
+tmp/
+temp/
+output/
+outputs/
+data/
+*.csv
+*.gpkg
+*.geojson
+*.shp
+*.shx
+*.dbf
+*.prj
+*.cpg
+
+# If you DO want to commit sample data, prefer:
+# data/sample.csv
+# and add an exception like:
+# !data/sample.csv
+
+# -------------------------
+# Build / packaging
+# -------------------------
+build/
+dist/
+*.egg-info/
+.eggs/
+pip-wheel-metadata/
+
+# -------------------------
+# Env / secrets
+# -------------------------
+.env
+.env.*
+*.key
+*.pem
+*.pfx
+*.crt
+secrets.toml
+
+# -------------------------
+# Coverage
+# -------------------------
+.coverage
+coverage.xml
+htmlcov/
+
+# -------------------------
+# System-specific
+# -------------------------
+*.swp
+*.swo
