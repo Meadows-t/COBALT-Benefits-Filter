@@ -59,9 +59,7 @@ def parse_linestring(val):
 
 
 def geojson_to_shapely(geom_dict):
-    """
-    Convert a GeoJSON Polygon/MultiPolygon dict (from Leaflet.Draw) to shapely geometry.
-    """
+    """Convert a GeoJSON Polygon/MultiPolygon dict (from Leaflet.Draw) to shapely geometry."""
     if not geom_dict:
         return None
     gtype = geom_dict.get("type", None)
@@ -78,17 +76,14 @@ def make_map(gdf_4326, value_col, selected_idx=None):
     Create a Folium map with line styling by *signed* value_col.
     If selected_idx provided, highlight those features in a thicker line.
     """
-    # Determine map center
     if len(gdf_4326) == 0:
         m = folium.Map(location=[51.4545, -2.5879], zoom_start=12, tiles="CartoDB positron")
-
-        # Still add draw control so user can draw even if nothing displayed
         Draw(
             export=False,
             draw_options={
                 "polyline": False,
-                "polygon": True,      # ✅ polygon enabled
-                "rectangle": False,   # ✅ rectangle disabled
+                "polygon": True,
+                "rectangle": False,
                 "circle": False,
                 "circlemarker": False,
                 "marker": False,
@@ -101,7 +96,6 @@ def make_map(gdf_4326, value_col, selected_idx=None):
     center = [(bounds[1] + bounds[3]) / 2, (bounds[0] + bounds[2]) / 2]
     m = folium.Map(location=center, zoom_start=10, tiles="CartoDB positron")
 
-    # Colormap based on *displayed* signed values
     vals = pd.to_numeric(gdf_4326[value_col], errors="coerce")
     vmin = float(vals.min()) if vals.notna().any() else 0.0
     vmax = float(vals.max()) if vals.notna().any() else 1.0
@@ -127,7 +121,6 @@ def make_map(gdf_4326, value_col, selected_idx=None):
         opacity = 0.9 if is_sel else 0.6
         return {"color": color, "weight": weight, "opacity": opacity}
 
-    # Add GeoJSON lines
     folium.GeoJson(
         data=gdf_4326.to_json(),
         name="Benefits lines",
@@ -141,7 +134,6 @@ def make_map(gdf_4326, value_col, selected_idx=None):
 
     folium.LayerControl().add_to(m)
 
-    # ✅ Polygon draw control (no rectangle)
     Draw(
         export=False,
         draw_options={
@@ -155,9 +147,7 @@ def make_map(gdf_4326, value_col, selected_idx=None):
         edit_options={"edit": True, "remove": True},
     ).add_to(m)
 
-    # Fit bounds
     m.fit_bounds([[bounds[1], bounds[0]], [bounds[3], bounds[2]]])
-
     return m
 
 
@@ -168,31 +158,38 @@ st.set_page_config(page_title="Benefits Polygon Filter", layout="wide")
 st.title("LineString Benefits Map (Polygon Filter)")
 
 with st.sidebar:
-    st.header("Inputs")
-    csv_path = st.text_input("CSV path", value="your_file.csv")
+    st.header("Upload")
+    uploaded_file = st.file_uploader("Drop your CSV file here", type=["csv"])
+
+    st.markdown("---")
+    st.header("Columns / CRS")
     geom_col = st.text_input("Geometry column (LineString coords)", value="Coords")
     value_col = st.text_input("Benefits column", value="Total Cost DIFF")
 
-    st.markdown("### CRS / Coordinates")
-    st.caption("If your coordinates are already lon/lat, use EPSG:4326. If UK grid, often EPSG:27700.")
-    source_crs = st.text_input("Source CRS (e.g., EPSG:4326 or EPSG:27700)", value="EPSG:4326")
+    # ✅ Updated default CRS
+    st.caption("If coords are lon/lat, use EPSG:4326. If UK grid, often EPSG:27700.")
+    source_crs = st.text_input("Source CRS (e.g., EPSG:4326 or EPSG:27700)", value="EPSG:27700")
 
     st.markdown("---")
-
-    # ✅ number input threshold (absolute) – easier to type e.g. 1000
+    # ✅ Updated default threshold
     abs_threshold = st.number_input(
         "Min |benefit| to include on the map",
         min_value=0.0,
-        value=1000.0,   # change to 0.0 if you want everything by default
-        step=100.0
+        value=10000.0,
+        step=1000.0
     )
-
     show_table = st.checkbox("Show selected rows table", value=True)
 
 
 @st.cache_data(show_spinner=True)
-def load_data(path, geom_col, value_col, source_crs):
-    df = pd.read_csv(path)
+def load_data_from_upload(file_bytes: bytes, filename: str, geom_col: str, value_col: str, source_crs: str):
+    """
+    Cache keyed on file content + parameters.
+    Streamlit file_uploader gives us bytes; we read via BytesIO.
+    """
+    from io import BytesIO
+
+    df = pd.read_csv(BytesIO(file_bytes))
 
     if geom_col not in df.columns:
         raise ValueError(f"Geometry column '{geom_col}' not found. Columns: {list(df.columns)}")
@@ -226,13 +223,18 @@ def load_data(path, geom_col, value_col, source_crs):
     return gdf_4326, abs_col
 
 
+if uploaded_file is None:
+    st.info("⬅️ Upload a CSV file using the sidebar to begin.")
+    st.stop()
+
 try:
-    gdf_4326, abs_col = load_data(csv_path, geom_col, value_col, source_crs)
+    file_bytes = uploaded_file.getvalue()
+    gdf_4326, abs_col = load_data_from_upload(file_bytes, uploaded_file.name, geom_col, value_col, source_crs)
 except Exception as e:
     st.error(str(e))
     st.stop()
 
-st.write(f"Loaded **{len(gdf_4326):,}** LineStrings with valid geometry.")
+st.write(f"Loaded **{len(gdf_4326):,}** LineStrings with valid geometry from **{uploaded_file.name}**.")
 
 # Original totals (signed only)
 orig_total_signed = float(gdf_4326[value_col].sum(skipna=True))
@@ -290,7 +292,7 @@ with col_stats:
         sel = gdf_plot[gdf_plot.intersects(selection_geom)].copy()
         sel_count = len(sel)
 
-        # ✅ Signed selection sum (as requested)
+        # Signed selection sum
         sel_sum_signed = float(sel[value_col].sum(skipna=True))
 
         st.metric("Selected features (on-map)", f"{sel_count:,}")
