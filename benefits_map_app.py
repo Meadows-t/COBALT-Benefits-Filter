@@ -1208,6 +1208,7 @@ def initialize_session_state():
 def main():
     """Main application entry point."""
     st.set_page_config(page_title="COBALT Benefits Analysis", layout="wide")
+    st.logo(r'assets/Red Logo.png')
     st.title("🚦 COBALT Benefits Analysis Dashboard")
 
     # Initialize state
