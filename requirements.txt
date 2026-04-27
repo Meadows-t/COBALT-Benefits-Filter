@@ -6,3 +6,4 @@ shapely
 pandas
 numpy
 branca
+jinja2
