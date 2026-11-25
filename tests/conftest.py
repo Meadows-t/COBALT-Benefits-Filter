@@ -1,7 +1,7 @@
 import pytest
 import geopandas as gpd
 from shapely.geometry import LineString
-import app
+import benefits_map_app
 
 
 @pytest.fixture(autouse=True)
